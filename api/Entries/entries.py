@@ -13,11 +13,11 @@ assign_my_entries_routes = Blueprint("assign_my_entries_routes", __name__)
 
 @assign_my_entries_routes.route('/api/v2/entries', methods=['POST'])
 def add_entries():
-    """Extracts user details from the post request, runs helper 
+    """Extracts user details from the post request, runs helper
     functions to confirm the user is registered, and inserts the
     user's details into the database."""
     details = entry_details.UserEntries()
-    user_id = details.get_user_id
+    user_id = details.get_user_id()
     if isinstance(user_id, bool) is False:
         if validate_entry_contents(details.get_title(), details.get_contents(),
                                    details.get_date_of_event(),
@@ -32,13 +32,13 @@ def add_entries():
     return jsonify({"message": "Invalid token please login first"}), 401
 
 
-@assign_my_entries_routes.route('/api/v2/entries/<int:entry_id>', methods=['GET'])
+@assign_my_entries_routes.route('/api/v2/entries/<int:entry_id>',
+                                methods=['GET'])
 def get_one_entry(entry_id):
     """Extracts contents from the post request and responds with the
     entry."""
     details = entry_details.UserEntries()
-    user_id = details.get_user_id
-    entry_id = entry_id
+    user_id = details.get_user_id()
     if isinstance(user_id, bool) is False:
         my_cursor.execute("""SELECT TITLE, CONTENTS, DATEOFEVENT, REMINDERTIME
                           FROM ENTRIES WHERE ID = %s AND USERID = %s;""",
@@ -55,7 +55,7 @@ def get_all_entries():
     """Uses a default user id to query the database and display all the entries
     associated with the user."""
     details = entry_details.UserEntries()
-    user_id = details.get_user_id
+    user_id = details.get_user_id()
     if isinstance(user_id, bool) is False:
         my_cursor.execute("""SELECT TITLE, CONTENTS, DATEOFEVENT, REMINDERTIME
                           FROM ENTRIES WHERE USERID = %s;""", (user_id,))
@@ -66,12 +66,12 @@ def get_all_entries():
     return jsonify({"message": "Invalid token please login first"}), 401
 
 
-@assign_my_entries_routes.route('/api/v2/entries/<int:entry_id>', methods=['PUT'])
+@assign_my_entries_routes.route('/api/v2/entries/<int:entry_id>',
+                                methods=['PUT'])
 def modify_entry(entry_id):
     """Used to modify diary entries."""
     details = entry_details.UserEntries()
-    user_id = details.get_user_id
-    entry_id = entry_id
+    user_id = details.get_user_id()
     if isinstance(user_id, bool) is False:
         if update_entry(entry_id, user_id, details.get_title(),
                         details.get_contents(), details.get_date_of_event(),
@@ -86,7 +86,8 @@ def modify_entry(entry_id):
     return jsonify({"message": "Invalid token please login first"}), 401
 
 
-@assign_my_entries_routes.route('/api/v2/entries/<int:entry_id>', methods=['DELETE'])
+@assign_my_entries_routes.route('/api/v2/entries/<int:entry_id>',
+                                methods=['DELETE'])
 def delete_entry(entry_id):
     """Used to delete a diary entry"""
     try:

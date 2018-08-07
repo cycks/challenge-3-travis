@@ -36,7 +36,6 @@ class UserDetails:
         """Used to extract user's username"""
         return self.details_from_post.get("user_name", None)
 
-    @property
     def get_user_id(self):
         """Used to extract user's id"""
         try:

@@ -1,5 +1,6 @@
-""""""
-from datetime import datetime, timedelta
+"""This file contails a class that is used to extract diary contents
+from a post request."""
+# from datetime import datetime, timedelta
 
 from Users.user_details import UserDetails
 
@@ -25,9 +26,9 @@ class UserEntries(UserDetails):
          post request."""
         return self.details_from_post.get("reminder_time", None)
 
-    def set_modify(self):
-        """A method used to set the time to modify an entry."""
-        return datetime.now() + timedelta(hours=24)
+    # def set_modify(self):
+    #     """A method used to set the time to modify an entry."""
+    #     return datetime.now() + timedelta(hours=24)
 
     def combine_entries(self):
         """combines all the entries into a dictionary."""
@@ -35,5 +36,5 @@ class UserEntries(UserDetails):
                        "contents": self.get_contents(),
                        "date_of_event": self.get_date_of_event(),
                        "reminder_time": self.get_reminder_time(),
-                       "user_id": UserDetails.get_user_id}
+                       "user_id": UserDetails.get_user_id(self)}
         return check_nulls

@@ -52,7 +52,7 @@ def create_entries_table():
 
 def check_user_in_database(email, password):
     """Helper function used to check if a user is in the database."""
-    my_cursor.execute("""SELECT ID FROM USERS WHERE EMAIL = %s AND 
+    my_cursor.execute("""SELECT ID FROM USERS WHERE EMAIL = %s AND
                       PASSWORD = %s;""", (email, password,))
     user_id = my_cursor.fetchone()
     connection.commit()
@@ -60,13 +60,6 @@ def check_user_in_database(email, password):
         return user_id
     return False
 
-def validate_user_contents(first_name, last_name, user_name, email, password):
-    """Helper function used to validate diary entries."""
-    diary_entry = [first_name, last_name, user_name, email, password]
-    for entry in diary_entry:
-        if len(entry) <= 5 or len(entry) >= 50 or "execute" in entry:
-            return False
-    return True
 
 def create_user(first_name, last_name, user_name, email, password):
     """Helper function used to create a user"""
@@ -78,7 +71,8 @@ def create_user(first_name, last_name, user_name, email, password):
                                           USERNAME,EMAIL, PASSWORD,
                                           DATETIMEREGISTERED)
                           VALUES (%s, %s, %s, %s, %s, %s);""",
-                          (first_name, last_name, user_name, email, password, datetime.now()))
+                          (first_name, last_name, user_name, email,
+                           password, datetime.now()))
         connection.commit()
         return True
     return False
@@ -113,8 +107,9 @@ def update_entry(entry_id, user_id, title, contents, date_of_event,
     if entry_in_database:
         my_cursor.execute("""UPDATE ENTRIES SET TITLE = %s,CONTENTS = %s,
                           DATEOFEVENT = %s, REMINDERTIME = %s WHERE ID = %s
-                          AND USERID = %s""", (title, contents, date_of_event,
-                          reminder_time, entry_id, user_id,))
+                          AND USERID = %s""",
+                          (title, contents, date_of_event, reminder_time,
+                           entry_id, user_id,))
         connection.commit()
         return True
     return False

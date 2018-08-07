@@ -1,7 +1,11 @@
-from flask import Flask, request, Blueprint, jsonify
+from flask import Blueprint, jsonify
+from flask_cors import CORS
 
-sikolia = Blueprint('sikolia', __name__)
+api_v2 = Blueprint('api_v2', __name__)
+CORS(api_v2, supports_credentials=True)
 
-@sikolia.route('api/auth/v2', methods=['GET'])
+
+@api_v2.route('/api/v2/auth', methods=['GET'])
 def home():
+    """Directs to the landing page of the application"""
     return jsonify({"message": "Welcome to my home page"})

@@ -1,58 +1,58 @@
+"""Module Containing my Users"""
 from datetime import datetime, timedelta
-import jwt
-from flask import request, jsonify, Blueprint
-from flask_classful import FlaskView
-from models import connection, my_cursor
 
+import jwt
+from flask import jsonify, Blueprint
+
+from models import create_user, check_user_in_database, my_cursor, validate_user_contents
+from . import user_details
 
 assign_my_users_routes = Blueprint("assign_my_users_routes", __name__)
 
 
-@assign_my_users_routes.route('api/auth/signup', methods=['POST'])
+@assign_my_users_routes.route('/api/v2/auth/signup', methods=['POST', 'GET'])
 def register():
     """Extracts user details from the post request, runs helper functions,
     and inserts the user's details into the database."""
-    details_from_post = request.get_json()
-    first_name = details_from_post.get("first_name", None)
-    last_name = details_from_post.get("last_name", None)
-    email = details_from_post.get("email", None)
-    password = details_from_post.get("password", None)
-    password2 = details_from_post.get("password2", None)
-    user_name = details_from_post.get('user_name', None)
-    if password == password2:
-        try:
-            my_cursor.execute("""SELECT EMAIL FROM USERS WHERE EMAIL = %s AND
-                               USERNAME = %s""", (email, user_name,))
-            my_cursor.execute("""INSERT INTO USERS (FIRSTNAME, LASTNAME,
-                USERNAME,EMAIL, PASSWORD,
-                DATETIMEREGISTERED)
-                VALUES (%s, %s, %s, %s, %s, %s)""",
-                              (first_name, last_name, user_name, email,
-                               password, datetime.now()))
-            connection.commit()
-            return jsonify({"message": "Successfully registered."})
-        except BaseException:
-            return jsonify({"message": "user_name or email already taken."})
-    else:
-        return jsonify({"message": "passwords must match"})
+    details = user_details.UserDetails()
+    if details.get_password() == details.get_password2():
+        # if validate_user_contents(first_name, last_name, user_name,
+        #                           email, password) is False:
+        #     return jsonify({"message": """No entry should be greater than
+        #                                50 or less than five"""})
+        if create_user(details.get_first_name, details.get_last_name(),
+                       details.get_user_name(), details.get_email(),
+                       details.get_password()) is True:
+            return jsonify({"message": "Successfully registered."}), 201
+        return jsonify({"message": "username or email already taken."}), 403
+    return jsonify({"message": "passwords must match"}), 403
 
 
-@assign_my_users_routes.route('api/auth/login/v2', methods=['GET', 'POST'])
+@assign_my_users_routes.route('/api/v2/auth/login', methods=['POST'])
 def login():
     """Extracts user details from the post request, runs helper functions to
-    confirm the user is registered, and inserts the user's details into the
+    confirm the user is registered, generates an access token for the user and
+    responds with an appropriate message."""
+    details = user_details.UserDetails()
+    user_id = check_user_in_database(details.get_email(), details.get_password())
+    if user_id:
+        user_token = jwt.encode({'user': user_id[0],
+                                 'exp': datetime.utcnow() + timedelta(minutes=40)},
+                                "This is not the owner")
+        return jsonify({"user_token": user_token.decode('utf-8'), "user": user_id}), 200
+    return jsonify({"message": "Invalid credentials."}), 401
+
+
+@assign_my_users_routes.route('/api/v2/auth/profile', methods=['GET'])
+def fetch_user_profile():
+    """Extracts user details from the post request, runs helper functions to
+    confirm the user is registered, and fetches the user's details from the
     database."""
-    details_from_post = request.get_json()
-    email = details_from_post.get("email", None)
-    password = details_from_post.get("password", None)
-    try:
-        my_cursor.execute("""SELECT ID FROM USERS WHERE (EMAIL = %s AND
-              PASSWORD = %s)""", (email, password,))
-        user_id = my_cursor.fetchone()
-        connection.commit()
-        jwt.encode({'user':user_id[0], 'exp': datetime.utcnow() +
-                                              timedelta(minutes=10)},
-                   "This is not the owner")
-        return jsonify({"message": "user successfully logged in."})
-    except BaseException:
-        return jsonify({"message": "Invalid credentials."})
+    details = user_details.UserDetails()
+    user_id = details.get_user_id
+    if isinstance(user_id, bool) is False:
+        my_cursor.execute("""SELECT FIRSTNAME, LASTNAME, USERNAME,EMAIL
+                          FROM USERS WHERE ID = %s;""", (user_id,))
+        one_entry = my_cursor.fetchall()
+        return jsonify({"message": one_entry}), 200
+    return jsonify({"message" " Invalid token please login first"}), 401
